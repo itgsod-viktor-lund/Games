@@ -7,8 +7,14 @@ class Game < Chingu::Window
 		self.caption = "Dungeon Hunter"
 		self.input = {esc: :exit}
 		@background_image = Background.create
-		@wall_image = Wall.create
 		@player = Player.create
+	end
+
+	def update
+		super
+		Laser.each_bounding_circle_collision(Wall) do |laser|
+      	laser.destroy
+     	end
 	end
 end
 
@@ -21,21 +27,30 @@ class Background < Chingu::GameObject
 end
 
 class Wall < Chingu::GameObject
+	has_traits :collision_detection, :bounding_circle
 
 	def setup
-		@x, @y = 800/2, 550/2
+		@x, @y = 25/2, 550/2
 		@image = Gosu::Image["wall.png"]
 	end
 end
 
 class Player < Chingu::GameObject
-	has_traits :velocity
+	attr_reader :angle_shot
+	has_traits :velocity, :collision_detection, :bounding_circle
 	
 	def setup
 		@lock = false
 		@x, @y = 100, 100
 		@angle_shot = 0
+		@laservelx = 0
+		@laservely = 0
+		@lock_right_x = false
+		@lock_left_x = false
+		@lock_up_y = false
+		@lock_down_y = false
 		@image = Gosu::Image["player.png"]
+		@wall_image = Wall.create
 
 		self.input = {
 			holding_up: :up,
@@ -59,6 +74,8 @@ class Player < Chingu::GameObject
 	def up
 		if lock_check
 			@y -= 5
+			@laservely = -10
+			@laservelx = 0
 			@angle_shot = 0
 		end
 	end
@@ -66,6 +83,8 @@ class Player < Chingu::GameObject
 	def down
 		if lock_check
 			@y += 5
+			@laservely = 10
+			@laservelx = 0
 			@angle_shot = 180
 		end
 	end
@@ -73,6 +92,8 @@ class Player < Chingu::GameObject
 	def right
 		if lock_check
 			@x += 5
+			@laservelx = 10
+			@laservely = 0
 			@angle_shot = 90
 		end
 	end
@@ -80,12 +101,14 @@ class Player < Chingu::GameObject
 	def left
 		if lock_check
 			@x -= 5
+			@laservelx = -10
+			@laservely = 0
 			@angle_shot = 270
 		end
 	end
 
 	def fire
-		Laser.create(x: self.x, y: self.y, angle: @angle_shot)
+		Laser.create(x: self.x, y: self.y, velocity_x: @laservelx, velocity_y: @laservely, angle: @angle_shot)
 	end
 end
 
@@ -94,8 +117,6 @@ class Laser < Chingu::GameObject
 
 	def setup
 		@image = Gosu::Image["flame_ball.png"]
-		self.velocity_x = Gosu::offset_y(angle, 10)
-		self.velocity_y = Gosu::offset_y(angle, 10)
 		after(3000) {self.destroy}
 	end
 end
