@@ -8,8 +8,8 @@ Right now the only thing in the game is the game window. Their is a bug in the g
 
 ###What will be in the game?
 
-+ A background image.
-+ A player character that can only be controled up, down, right and left. Not diagonal.
++ A background image. (Done)
++ A player character that can only be controled up, down, right and left. Not diagonal. (Done)
 + Different dungeon levels.
 + Enemies.
 

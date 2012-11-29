@@ -7,16 +7,20 @@ class Game < Chingu::Window
 		self.caption = "Dungeon Hunter"
 		self.input = {esc: :exit}
 		@background_image = Background.create
+		Wall.create(:x => 25/2, :y => 550/2, :image => "left_wall.png")
+		Wall.create(:x => 800/2,:y => 25/2, :image => "wall_up_down.png")
+		Wall.create(:x => 800/2, :y => 550-(25/2), :image => "wall_up_down.png")
 		@player = Player.create
 	end
 
 	def update
 		super
-		Laser.each_bounding_circle_collision(Wall) do |laser|
-      	laser.destroy
-     	end
+		Laser.each_collision(Wall) do |laser,_|
+			laser.destroy
+		end
 	end
 end
+
 
 class Background < Chingu::GameObject
 
@@ -27,12 +31,7 @@ class Background < Chingu::GameObject
 end
 
 class Wall < Chingu::GameObject
-	has_traits :collision_detection, :bounding_circle
-
-	def setup
-		@x, @y = 25/2, 550/2
-		@image = Gosu::Image["wall.png"]
-	end
+	has_traits :collision_detection, :bounding_box
 end
 
 class Player < Chingu::GameObject
@@ -42,15 +41,14 @@ class Player < Chingu::GameObject
 	def setup
 		@lock = false
 		@x, @y = 100, 100
-		@angle_shot = 0
-		@laservelx = 0
+		@angle_shot = 90
+		@laservelx = 10
 		@laservely = 0
 		@lock_right_x = false
 		@lock_left_x = false
 		@lock_up_y = false
 		@lock_down_y = false
 		@image = Gosu::Image["player.png"]
-		@wall_image = Wall.create
 
 		self.input = {
 			holding_up: :up,
@@ -60,6 +58,7 @@ class Player < Chingu::GameObject
 			space: :fire
 		}
 	end
+
 
 	def update
 		@lock = false
@@ -113,7 +112,7 @@ class Player < Chingu::GameObject
 end
 
 class Laser < Chingu::GameObject
-	has_traits :velocity, :timer, :collision_detection, :bounding_circle
+	has_traits :velocity, :timer, :collision_detection, :bounding_box
 
 	def setup
 		@image = Gosu::Image["flame_ball.png"]
