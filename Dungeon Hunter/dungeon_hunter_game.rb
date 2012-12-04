@@ -1,21 +1,31 @@
 require 'Chingu'
+require './dungeon_hunter_game2.rb'
 
 class Game < Chingu::Window
 
 	def initialize
 		super 800, 550
-		self.caption = "Dungeon Hunter"
+		switch_game_state(PlayGame)
+	end
+
+end
+
+class PlayGame < Chingu::GameState
+
+	def initialize
+		super
+		$window.caption = "Dungeon Hunter"
 		self.input = {esc: :exit}
 		@background_image = Background.create
-		Wall.create(x: 25/2, y: 550/2, image: "left_wall.png")
-		Wall.create(x: 800/2, y: 25/2, image: "wall_up_down.png")
-		Wall.create(x: 800/2, y: 550-(25/2), image: "wall_up_down.png")
-		Wall.create(x: 800-(25/2), y: (550/2)-50, image: "right_wall.png")
+		@left_wall = Wall.create(x: 25/2, y: 550/2, image: "left_wall.png")
+		@up_wall = Wall.create(x: 800/2, y: 25/2, image: "wall_up_down.png")
+		@down_wall = Wall.create(x: 800/2, y: 550-(25/2), image: "wall_up_down.png")
+		@right_wall = Wall.create(x: 800-(25/2), y: (550/2)-50, image: "right_wall.png")
 		@enemie1 = EnemieLvL1.create(x: 300, y: 200)
-		@enemie1 = EnemieLvL1.create(x: 200, y: 300)
-		@enemie1 = EnemieLvL1.create(x: 500, y: 250)
-		@enemie1 = EnemieLvL1.create(x: 500, y: 450)
-		@enemie1 = EnemieLvL1.create(x: 700, y: 75)
+		@enemie2 = EnemieLvL1.create(x: 200, y: 300)
+		@enemie3 = EnemieLvL1.create(x: 500, y: 250)
+		@enemie4 = EnemieLvL1.create(x: 500, y: 450)
+		@enemie5 = EnemieLvL1.create(x: 700, y: 75)
 		@player = Player.create
 	end
 
@@ -33,6 +43,26 @@ class Game < Chingu::Window
 		Player.each_collision(EnemieLvL1) do |hp, player|
 			hp.hp_down
 		end
+		
+		if @player.hp <= 0
+			@player.destroy
+			@background_image.destroy
+			@enemie1.destroy
+			@enemie2.destroy
+			@enemie3.destroy
+			@enemie4.destroy
+			@enemie5.destroy
+			@left_wall.destroy
+			@up_wall.destroy
+			@down_wall.destroy
+			@right_wall.destroy
+			
+			@background_image = Dead.create
+		end
+
+		if @player.x < 0 or @player.x > 800 or @player.y < 0 or @player.y > 550
+			push_game_state(LvL2)
+		end
 	end
 end
 
@@ -40,8 +70,17 @@ end
 class Background < Chingu::GameObject
 
 	def setup
+
 		@x, @y = 800/2, 550/2
 		@image = Gosu::Image["background.png"]
+	end
+end
+
+class Dead < Chingu::GameObject
+
+	def setup
+		@x, @y = 800/2, 550/2
+		@image = Gosu::Image["dead.png"]
 	end
 end
 
@@ -51,7 +90,7 @@ end
 
 class Player < Chingu::GameObject
 	attr_writer :x, :y
-	attr_reader :angle_shot
+	attr_reader :angle_shot, :hp
 	has_traits :velocity, :collision_detection, :bounding_box, :timer
 	
 	def setup
@@ -100,9 +139,6 @@ class Player < Chingu::GameObject
 			end
 		end
 
-		if @x < 0 or @x > 800 or @y < 0 or @y > 550
-
-		end	
 	end
 
 	def hp_down
@@ -112,9 +148,6 @@ class Player < Chingu::GameObject
 			after(1000) {@hpDown = false}	
 		end
 		
-		if @hp <= 0
-			self.destroy
-		end
 	end
 
 	def lock_check
