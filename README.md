@@ -1,6 +1,6 @@
 #Dungeon Hunter- Game
 
-This is a new project I started just to try out a new type of game preograming.
+This is a new project I started just to try out a new type of game programing.
 
 ###What's in the game?
 
